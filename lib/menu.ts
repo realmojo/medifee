@@ -1,6 +1,9 @@
-import { REGION_HUB_SLUG } from "./regions";
+import { CLASS_HUB_SLUG, REGION_HUB_SLUG } from "./scopes";
 
-export interface MenuItem { name: string; href: string }
+export interface MenuItem {
+  name: string;
+  href: string;
+}
 
 /** 항목 허브 경로 */
 export const ITEM_HUB_SLUG = "항목";
@@ -9,6 +12,7 @@ export const NAV: MenuItem[] = [
   { name: "홈", href: "/" },
   { name: "항목별", href: `/${ITEM_HUB_SLUG}` },
   { name: "지역별", href: `/${REGION_HUB_SLUG}` },
+  { name: "종별", href: `/${CLASS_HUB_SLUG}` },
 ];
 
 export const SITE_LINKS: MenuItem[] = [
@@ -21,14 +25,15 @@ export const SITE_LINKS: MenuItem[] = [
 /**
  * 공식 창구.
  *
- * 이 사이트의 가격은 2015~2016년 기준이라 현재가가 아니다.
- * 지금 가격은 반드시 아래에서 확인하도록 넘긴다.
+ * 이 사이트가 보여주는 것은 지역·종별로 묶은 **집계값**이라 특정 병원의
+ * 가격이 아니다. 실제로 갈 병원의 값은 아래에서 확인하도록 넘긴다.
  */
 export const OFFICIAL_LINKS = {
-  /** 심평원 비급여 진료비 조회 (현재 가격) */
+  /** 심평원 — 병원별 비급여 진료비 조회 */
   hira: "https://www.hira.or.kr/",
   /** 공단 비급여 정보 포털 */
   nhis: "https://www.nhis.or.kr/nbinfo/index.do",
-  /** 데이터 원본 */
-  dataset: "https://www.data.go.kr/data/15001700/openapi.do",
+  /** 데이터 원본 (KOSIS 통계표 — 서울 비급여진료비용) */
+  dataset:
+    "https://kosis.kr/statHtml/statHtml.do?orgId=354&tblId=DT_354006_2021A022",
 } as const;

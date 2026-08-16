@@ -7,7 +7,7 @@ export const SITE = {
   locale: "ko_KR",
   ogImage: "/opengraph-image",
   description:
-    "같은 진단서가 병원마다 2천원과 5만원. 심평원이 공개한 비급여 진료비를 항목별·지역별로 정리했습니다.",
+    "도수치료 중간값 10만원, 상급종합병원은 얼마일까. 심평원이 공개한 2025년 비급여 진료비를 항목별·지역별·병원 종별로 정리했습니다.",
 } as const;
 
 export function absoluteUrl(path: string): string {
@@ -81,7 +81,9 @@ export function datasetJsonLd({
     url: absoluteUrl(path),
     inLanguage: "ko-KR",
     creator: { "@type": "Organization", name: "건강보험심사평가원" },
-    isBasedOn: "https://www.data.go.kr/data/15001700/openapi.do",
+    isBasedOn:
+      "https://kosis.kr/statHtml/statHtml.do?orgId=354&tblId=DT_354006_2021A022",
+    temporalCoverage: "2025",
     publisher: { "@type": "Organization", name: SITE.name, url: SITE.url },
   };
 }

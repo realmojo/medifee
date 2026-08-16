@@ -5,12 +5,11 @@ import { AD_CLIENT } from "@/lib/ads";
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 
-const title = "비급여 진료비 - 병원마다 얼마나 다를까";
+const title = "비급여 진료비 - 항목별 금액과 지역·병원 종별 차이";
 const description =
-  "같은 진단서가 병원마다 2천원과 5만원. 심사평가원이 공개한 비급여 진료비를 항목별·지역별로 정리했습니다.";
+  "도수치료 중간값 10만원, MRI 45만원. 심사평가원이 공개한 2025년 비급여 진료비를 항목별·지역별·병원 종별로 정리했습니다.";
 
 const GOOGLE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION ?? "";
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? "";
 
 export const metadata: Metadata = {
   ...buildMetadata({
@@ -20,10 +19,10 @@ export const metadata: Metadata = {
     keywords: [
       "비급여",
       "비급여 진료비",
-      "진단서 비용",
-      "병원비 비교",
-      "상급병실료",
+      "도수치료 비용",
       "MRI 비용",
+      "상급병실료 1인실",
+      "진단서 비용",
       "제증명수수료",
     ],
   }),
@@ -105,25 +104,25 @@ export default function RootLayout({
           crossOrigin="anonymous"
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${AD_CLIENT}`}
         />
-        {GA_ID && (
-          <>
-            <script
-              async
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-            />
-            <script
-              id="google-analytics"
-              dangerouslySetInnerHTML={{
-                __html: `
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);}
-                  gtag('js', new Date());
-                  gtag('config', '${GA_ID}');
-                `,
-              }}
-            />
-          </>
-        )}
+        {/* Google tag (gtag.js) */}
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-5BM9W5BC3P"
+        />
+        <script
+          id="google-analytics"
+          dangerouslySetInnerHTML={{
+            __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+              dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+
+            gtag('config', 'G-5BM9W5BC3P');
+          `,
+          }}
+        />
       </head>
       <body>
         <SiteHeader />

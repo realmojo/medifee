@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { buildMetadata, SITE } from "@/lib/seo";
-import { PRICE_BASE_YEARS } from "@/lib/price-data";
+import { DATA_YEAR } from "@/lib/fee-data";
 
 export const metadata: Metadata = buildMetadata({
   path: "/contact",
@@ -35,7 +35,7 @@ export default function ContactPage() {
           <li>
             <strong>가격 정정 요청</strong> — 의료기관에서 현재 가격이 표시된 값과
             다르다고 알려주시는 경우. 저희 데이터는{" "}
-            {PRICE_BASE_YEARS} 기준이라 실제로 차이가 있을 수 있습니다.
+            {DATA_YEAR}년 기준 집계값이라 실제 가격과 차이가 있을 수 있습니다.
           </li>
           <li>
             <strong>데이터 오류 제보</strong> — 이름·주소·전화번호가 실제와 다른
