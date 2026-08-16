@@ -258,6 +258,42 @@ export function relativeSign(value: number, base: number): "up" | "down" | "flat
   return pct > 0 ? "up" : pct < 0 ? "down" : "flat";
 }
 
+/**
+ * 항목 제목을 만든다.
+ *
+ * 52개 항목이 전부 "{이름}, 병원마다 N배 차이 납니다"로 같으면 자동 생성으로
+ * 읽히고 검색 결과에서도 서로 잡아먹는다. 대분류마다 사람들이 실제로 치는
+ * 말이 다르므로 그에 맞춰 갈라 쓴다.
+ *   제증명수수료 → "발급 비용"   병실 → "병실료"   검사 → "검사비"
+ *   치과 → "치과마다"           한방 → "한의원마다"
+ */
+export function itemHeadline(
+  item: { item_name: string; item_category: string },
+  ratio: number | null,
+): string {
+  const n = item.item_name;
+  const r = ratio ? `${ratio}배` : "얼마나";
+  const c = item.item_category;
+
+  if (c === "제증명수수료") return `${n} 발급 비용, 병원마다 ${r} 차이`;
+  if (c === "상급병실료차액") return `${n} 병실료, 병원마다 ${r} 차이`;
+  if (c.includes("치과") || c === "충치치료료")
+    return `${n} 비용, 치과마다 ${r} 차이`;
+  if (c.includes("한방")) return `${n} 비용, 한의원마다 ${r} 차이`;
+  if (c.includes("검사") || c.includes("진단"))
+    return `${n} 검사비, 병원마다 ${r} 차이`;
+  if (c.includes("상담")) return `${n} 비용, 병원마다 ${r} 차이`;
+  return `${n}, 병원마다 ${r} 차이`;
+}
+
+/** 화면 안에서 항목을 부를 때 쓰는 말 */
+export function itemNoun(category: string): string {
+  if (category === "제증명수수료") return "서류";
+  if (category === "상급병실료차액") return "병실";
+  if (category.includes("검사") || category.includes("진단")) return "검사";
+  return "항목";
+}
+
 /** 배수를 말로. "10배 차이" */
 export function ratioText(ratio: number | null): string {
   if (!ratio) return "-";

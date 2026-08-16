@@ -1,4 +1,6 @@
 import {
+  itemHeadline,
+  itemNoun,
   listItemPrices,
   priceRatio,
   ratioText,
@@ -95,9 +97,7 @@ export default async function ItemView({ item }: { item: ItemStats }) {
           </nav>
 
           <header className="entry-header">
-            <h1 className="entry-title">
-              {item.item_name}, 병원마다 {ratioText(ratio)} 차이 납니다
-            </h1>
+            <h1 className="entry-title">{itemHeadline(item, ratio)}</h1>
             <div className="entry-header__bottom">
               <div className="entry-meta">
                 <span>{SITE.name}</span>
@@ -117,9 +117,11 @@ export default async function ItemView({ item }: { item: ItemStats }) {
 
             <p className="entry-lead">
               {withParticle(item.item_name, "은는")} 건강보험이 적용되지 않는
-              비급여 항목이라 병원이 가격을 스스로 정합니다. 공개 자료에 들어
-              있는 {item.hospital_count}곳을 견주면 가장 싼 곳과 가장 비싼 곳이{" "}
-              <strong>{ratioText(ratio)}</strong>까지 벌어집니다.
+              비급여 {itemNoun(item.item_category)}라 병원이 값을 스스로
+              정합니다. 공개 자료에 들어 있는 {item.hospital_count}곳을 견주면
+              가장 싼 곳과 가장 비싼 곳이{" "}
+              <strong>{ratioText(ratio)}</strong>까지 벌어집니다. 실손보험으로
+              돌려받을 수 있는지도 항목에 따라 갈립니다.
             </p>
 
             <div className="cta-row">

@@ -7,6 +7,7 @@ import {
   getAllRegionStats,
 } from "@/lib/price-data";
 import { ITEM_HUB_SLUG, OFFICIAL_LINKS } from "@/lib/menu";
+import { GUIDES } from "@/lib/guides";
 import { REGION_HUB_SLUG, SIDOS } from "@/lib/regions";
 import StatTile from "@/components/price/StatTile";
 import DataNotice from "@/components/price/DataNotice";
@@ -143,6 +144,30 @@ export default async function HomePage() {
               </a>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 36 }}>
+        <div className="sec-head">
+          <h2 className="sec-title">알아두면 돈이 되는 것들</h2>
+        </div>
+        <div className="bento-grid">
+          {GUIDES.map((g) => (
+            <a
+              target="_self"
+              key={g.slug}
+              href={`/${g.slug}`}
+              className="bento-card"
+            >
+              <div className="bento-card__icon" aria-hidden>
+                {g.emoji}
+              </div>
+              <h3 className="bento-card__title">
+                {g.title.split(" — ")[0].split(",")[0]}
+              </h3>
+              <p className="bento-card__desc">{g.summary}</p>
+            </a>
+          ))}
         </div>
       </section>
 

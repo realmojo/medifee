@@ -2,6 +2,7 @@ import { MetadataRoute } from "next";
 import { SITE_LINKS, ITEM_HUB_SLUG } from "@/lib/menu";
 import { REGION_HUB_SLUG } from "@/lib/regions";
 import { getAllRegionStats, listItems, regionsWithData } from "@/lib/price-data";
+import { GUIDES } from "@/lib/guides";
 import { absoluteUrl } from "@/lib/seo";
 
 /** 전체 URL 이 200여 개라 한 파일로 충분하다 */
@@ -25,6 +26,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...statics,
+    ...GUIDES.map((g) => ({
+      url: absoluteUrl(`/${g.slug}`),
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.9,
+    })),
     ...items.map((i) => ({
       url: absoluteUrl(`/${i.item_slug}`),
       lastModified: now,

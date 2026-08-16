@@ -1,6 +1,7 @@
 import { SITE_LINKS, OFFICIAL_LINKS, ITEM_HUB_SLUG } from "@/lib/menu";
 import { REGION_HUB_SLUG, SIDOS } from "@/lib/regions";
 import { PRICE_BASE_YEARS } from "@/lib/price-data";
+import { GUIDES } from "@/lib/guides";
 
 export default function SiteFooter() {
   return (
@@ -40,6 +41,19 @@ export default function SiteFooter() {
                   사망진단서
                 </a>
               </li>
+            </ul>
+          </div>
+
+          <div className="site-footer__col">
+            <h3>알아두기</h3>
+            <ul>
+              {GUIDES.map((g) => (
+                <li key={g.slug}>
+                  <a target="_self" href={`/${g.slug}`}>
+                    {g.title.split(" — ")[0].split(",")[0]}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 

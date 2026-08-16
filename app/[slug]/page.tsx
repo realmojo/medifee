@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { findRegion, REGION_HUB_SLUG, REGIONS, type Region } from "@/lib/regions";
 import { ITEM_HUB_SLUG } from "@/lib/menu";
+import { findGuide, GUIDES, type Guide } from "@/lib/guides";
 import {
   getItem,
   getRegionStats,
+  itemHeadline,
   priceRatio,
   ratioText,
   type ItemStats,
@@ -15,6 +17,7 @@ import ItemHubView from "./ItemHubView";
 import ItemView from "./ItemView";
 import RegionHubView from "./RegionHubView";
 import RegionView from "./RegionView";
+import GuideView from "./GuideView";
 
 /**
  * 한 라우트가 네 화면을 맡는다.
@@ -57,6 +60,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     });
   }
 
+  const guide = findGuide(slug);
+  if (guide) return guideMetadata(guide);
+
   const region = findRegion(slug);
   if (region) return regionMetadata(region);
 
@@ -66,18 +72,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {};
 }
 
+function guideMetadata(guide: Guide): Metadata {
+  return buildMetadata({
+    path: `/${guide.slug}`,
+    title: `${guide.title} | ${SITE.name}`,
+    description: guide.description,
+    keywords: guide.keywords,
+    type: "article",
+  });
+}
+
 function itemMetadata(item: ItemStats): Metadata {
   const ratio = priceRatio(item);
   return buildMetadata({
     path: `/${item.item_slug}`,
-    title: `${item.item_name} 비용, 병원마다 ${ratio ? ratioText(ratio) : "얼마나"} 차이 | ${SITE.name}`,
+    title: `${itemHeadline(item, ratio)} | ${SITE.name}`,
     description: `${item.item_name}은 병원에 따라 ${ratioText(ratio)}까지 차이가 납니다. 어떤 종별·지역이 상대적으로 비싼지 정리했습니다. 병원급 이상 ${item.hospital_count}곳 기준.`,
     keywords: [
       item.item_name,
       `${item.item_name} 비용`,
       `${item.item_name} 가격`,
+      `${item.item_name} 실비`,
       item.item_category,
       "비급여",
+      "비급여 진료비",
     ],
     type: "article",
   });
@@ -113,6 +131,11 @@ export default async function SlugPage({ params }: Props) {
   if (slug === ITEM_HUB_SLUG) return <ItemHubView />;
   if (slug === REGION_HUB_SLUG) return <RegionHubView />;
 
+  // 가이드를 지역·항목보다 먼저 본다. 슬러그가 우리가 직접 정한 고정 목록이라
+  // 데이터에서 나오는 항목 이름에 가려지면 안 된다.
+  const guide = findGuide(slug);
+  if (guide) return <GuideView guide={guide} />;
+
   const region = findRegion(slug);
   if (region) return <RegionView region={region} />;
 
@@ -126,6 +149,7 @@ export function generateStaticParams(): { slug: string }[] {
   return [
     { slug: ITEM_HUB_SLUG },
     { slug: REGION_HUB_SLUG },
+    ...GUIDES.map((g) => ({ slug: g.slug })),
     ...REGIONS.map((r) => ({ slug: r.slug })),
   ];
 }
