@@ -1,8 +1,10 @@
 import {
-  formatWon,
   getRegionStats,
+  listItemPrices,
   listRegionPrices,
-  PRICE_BASE_YEARS,
+  relative,
+  relativeSign,
+  SCOPE_NOTE,
   type PriceRow,
 } from "@/lib/price-data";
 import { REGION_HUB_SLUG, type Region } from "@/lib/regions";
@@ -13,33 +15,52 @@ import DataNotice from "@/components/price/DataNotice";
 import Adsense from "@/components/Adsense";
 import { AD_SLOTS } from "@/lib/ads";
 
-/** 항목별로 묶어 최저·중간·최고를 낸다 */
-function summarize(rows: PriceRow[]) {
-  const map = new Map<string, { name: string; category: string; v: number[] }>();
+/**
+ * 이 지역의 항목별 위치를 **전국 평균 대비**로 낸다.
+ *
+ * 원 단위 금액은 화면에 싣지 않는다. 대신 항목마다 전국 평균을 100으로 놓고
+ * 이 지역이 어느 쪽에 있는지만 보여준다. 전국 평균은 항목별로 따로 구해야
+ * 하므로 항목 수만큼 조회가 필요한데, 지역 하나에 항목이 많아야 수십 개이고
+ * 그 조회들은 모두 캐시된다.
+ */
+async function summarize(rows: PriceRow[]) {
+  const byItem = new Map<
+    string,
+    { name: string; category: string; v: number[] }
+  >();
   for (const r of rows) {
     if (r.price_max === null) continue;
-    const e = map.get(r.item_slug) ?? {
+    const e = byItem.get(r.item_slug) ?? {
       name: r.item_name,
       category: r.item_category,
       v: [],
     };
     e.v.push(r.price_max);
-    map.set(r.item_slug, e);
+    byItem.set(r.item_slug, e);
   }
-  return [...map.entries()]
-    .map(([slug, e]) => {
-      const sorted = [...e.v].sort((a, b) => a - b);
+
+  const out = await Promise.all(
+    [...byItem.entries()].map(async ([slug, e]) => {
+      const mine = e.v.reduce((a, b) => a + b, 0) / e.v.length;
+      const national = (await listItemPrices(slug))
+        .map((x) => x.price_max)
+        .filter((x): x is number => x !== null);
+      const base = national.length
+        ? national.reduce((a, b) => a + b, 0) / national.length
+        : 0;
       return {
         slug,
         name: e.name,
         category: e.category,
-        count: sorted.length,
-        min: sorted[0],
-        median: sorted[Math.floor(sorted.length / 2)],
-        max: sorted[sorted.length - 1],
+        count: e.v.length,
+        diff: base ? relative(mine, base) : "-",
+        sign: base ? relativeSign(mine, base) : ("flat" as const),
+        index: base ? mine / base : 1,
       };
-    })
-    .sort((a, b) => b.count - a.count);
+    }),
+  );
+
+  return out.sort((a, b) => b.index - a.index);
 }
 
 export default async function RegionView({ region }: { region: Region }) {
@@ -50,10 +71,10 @@ export default async function RegionView({ region }: { region: Region }) {
 
   if (!stats || rows.length === 0) return <EmptyRegion region={region} />;
 
-  const items = summarize(rows);
+  const items = await summarize(rows);
   const hospitals = [...new Set(rows.map((r) => r.hospital))];
 
-  const description = `${region.name} 병원 ${stats.hospital_count}곳의 비급여 진료비입니다. ${stats.item_count}개 항목, ${PRICE_BASE_YEARS} 기준.`;
+  const description = `${region.name} 병원 ${stats.hospital_count}곳이 공개한 비급여 ${stats.item_count}개 항목이 전국 평균과 견주어 어느 쪽인지 정리했습니다.`;
 
   return (
     <>
@@ -86,8 +107,8 @@ export default async function RegionView({ region }: { region: Region }) {
         <span className="cat-badge cat-badge--region">{region.sidoName}</span>
         <h1>{region.name} 비급여 진료비</h1>
         <p>
-          {region.name} 병원 {stats.hospital_count}곳의 비급여 항목 가격입니다.
-          {PRICE_BASE_YEARS} 기준이며 병원급 이상만 들어 있습니다.
+          {region.name} 병원 {stats.hospital_count}곳이 공개한 비급여 항목이
+          전국 평균과 견주어 어느 쪽인지 정리했습니다. {SCOPE_NOTE}.
         </p>
       </div>
 
@@ -99,23 +120,23 @@ export default async function RegionView({ region }: { region: Region }) {
         <StatTile label="병원" value={`${stats.hospital_count}곳`} />
         <StatTile label="공개 항목" value={`${stats.item_count}개`} />
         <StatTile label="가격 자료" value={`${stats.price_rows}건`} />
-        <StatTile label="기준 시점" value={PRICE_BASE_YEARS} sub="현재가 아님" />
+        <StatTile label="금액 표기" value="없음" sub="차이만 보여줍니다" />
       </section>
 
       <section className="panel">
         <h2 className="panel__title">항목별 가격 ({items.length}개)</h2>
         <p className="panel__desc">
-          같은 항목이라도 {region.name} 안에서 병원마다 다릅니다. 항목 이름을
-          누르면 전국 병원과 견줄 수 있습니다.
+          항목마다 전국 평균을 기준으로 {region.name}이 어느 쪽에 있는지입니다.
+          금액이 아니라 상대적인 위치입니다. 항목 이름을 누르면 전국 병원과
+          견줄 수 있습니다.
         </p>
         <div className="table-scroll">
           <table className="pr-table">
             <thead>
               <tr>
                 <th scope="col">항목</th>
-                <th scope="col" className="is-num">최저</th>
-                <th scope="col" className="is-num">중간</th>
-                <th scope="col" className="is-num">최고</th>
+                <th scope="col" className="is-num">병원</th>
+                <th scope="col" className="is-num">전국 평균 대비</th>
               </tr>
             </thead>
             <tbody>
@@ -129,13 +150,12 @@ export default async function RegionView({ region }: { region: Region }) {
                     >
                       {it.name}
                     </a>
-                    <span className="pr-table__meta">
-                      {it.category} · {it.count}곳
-                    </span>
+                    <span className="pr-table__meta">{it.category}</span>
                   </td>
-                  <td className="is-num">{formatWon(it.min)}</td>
-                  <td className="is-num">{formatWon(it.median)}</td>
-                  <td className="is-num">{formatWon(it.max)}</td>
+                  <td className="is-num">{it.count}곳</td>
+                  <td className="is-num">
+                    <span className={`rel rel--${it.sign}`}>{it.diff}</span>
+                  </td>
                 </tr>
               ))}
             </tbody>

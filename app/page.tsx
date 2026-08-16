@@ -1,9 +1,8 @@
 import {
-  formatWon,
   groupByCategory,
   listItems,
   priceRatio,
-  PRICE_BASE_YEARS,
+  ratioText,
   SCOPE_NOTE,
   getAllRegionStats,
 } from "@/lib/price-data";
@@ -50,7 +49,7 @@ export default async function HomePage() {
         <StatTile label="공개 항목" value={`${items.length}개`} />
         <StatTile label="병원" value={`${hospitals}곳`} sub={SCOPE_NOTE} />
         <StatTile label="지역" value={`${regions}곳`} />
-        <StatTile label="기준 시점" value={PRICE_BASE_YEARS} sub="현재가 아님" />
+        <StatTile label="금액 표기" value="없음" sub="차이만 보여줍니다" />
       </section>
 
       <div className="ad-slot">
@@ -67,17 +66,16 @@ export default async function HomePage() {
           </div>
           <div className="panel">
             <p className="panel__desc">
-              최고가가 최저가의 몇 배인지입니다. 병원 20곳 이상 자료가 있는
-              항목만 넣었습니다.
+              가장 싼 병원과 가장 비싼 병원이 몇 배 벌어지는지입니다.
+              병원 20곳 이상 자료가 있는 항목만 넣었습니다.
             </p>
             <div className="table-scroll">
               <table className="pr-table">
                 <thead>
                   <tr>
                     <th scope="col">항목</th>
-                    <th scope="col" className="is-num">최저</th>
-                    <th scope="col" className="is-num">최고</th>
-                    <th scope="col" className="is-num">배수</th>
+                    <th scope="col" className="is-num">병원</th>
+                    <th scope="col" className="is-num">차이</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -93,9 +91,8 @@ export default async function HomePage() {
                         </a>
                         <span className="pr-table__meta">{item.item_category}</span>
                       </td>
-                      <td className="is-num">{formatWon(item.min_price)}</td>
-                      <td className="is-num">{formatWon(item.max_price)}</td>
-                      <td className="is-num"><strong>{ratio}배</strong></td>
+                      <td className="is-num">{item.hospital_count}곳</td>
+                      <td className="is-num"><strong>{ratioText(ratio)}</strong></td>
                     </tr>
                   ))}
                 </tbody>

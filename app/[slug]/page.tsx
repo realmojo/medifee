@@ -3,11 +3,10 @@ import { notFound } from "next/navigation";
 import { findRegion, REGION_HUB_SLUG, REGIONS, type Region } from "@/lib/regions";
 import { ITEM_HUB_SLUG } from "@/lib/menu";
 import {
-  formatWon,
   getItem,
   getRegionStats,
   priceRatio,
-  PRICE_BASE_YEARS,
+  ratioText,
   type ItemStats,
 } from "@/lib/price-data";
 import { buildMetadata, SITE } from "@/lib/seo";
@@ -71,8 +70,8 @@ function itemMetadata(item: ItemStats): Metadata {
   const ratio = priceRatio(item);
   return buildMetadata({
     path: `/${item.item_slug}`,
-    title: `${item.item_name} 비용, 병원마다 ${ratio ? `${ratio}배` : "얼마나"} 차이 | ${SITE.name}`,
-    description: `${item.item_name} 비급여 가격은 ${formatWon(item.min_price)}부터 ${formatWon(item.max_price)}까지 벌어집니다. 병원 ${item.hospital_count}곳 기준, ${PRICE_BASE_YEARS} 공개 자료.`,
+    title: `${item.item_name} 비용, 병원마다 ${ratio ? ratioText(ratio) : "얼마나"} 차이 | ${SITE.name}`,
+    description: `${item.item_name}은 병원에 따라 ${ratioText(ratio)}까지 차이가 납니다. 어떤 종별·지역이 상대적으로 비싼지 정리했습니다. 병원급 이상 ${item.hospital_count}곳 기준.`,
     keywords: [
       item.item_name,
       `${item.item_name} 비용`,
@@ -103,7 +102,7 @@ async function regionMetadata(region: Region): Promise<Metadata> {
   return buildMetadata({
     path: `/${region.slug}`,
     title: `${region.name} 비급여 진료비 — 병원 ${count}곳 | ${SITE.name}`,
-    description: `${region.name} 병원 ${count}곳의 비급여 항목 가격입니다. ${stats?.item_count ?? 0}개 항목, ${PRICE_BASE_YEARS} 기준.`,
+    description: `${region.name} 병원 ${count}곳이 공개한 비급여 ${stats?.item_count ?? 0}개 항목이 전국 평균과 견주어 어느 쪽인지 정리했습니다.`,
     keywords: [`${region.name} 병원비`, `${region.name} 비급여`, "진단서 비용"],
   });
 }

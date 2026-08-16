@@ -10,10 +10,13 @@
  * 가격 적용일자가 **2015년(92%)·2016년(8%)** 이다. 지금 가격이 아니다.
  * 그래서 절대 금액을 "현재 가격"으로 말하지 않는다.
  *
- * 대신 말할 수 있는 것이 있다. **비급여는 병원이 스스로 정하는 값이라 같은
- * 항목도 몇 배씩 차이 난다**는 구조다. 소견서 300배, 진료확인서 100배,
- * 일반진단서 25배. 이건 연도가 지나도 달라지지 않는 성질이고, 실제로 사람들이
- * 겪는 일이다. 그 구조를 보여주고 현재 가격은 심평원 조회로 넘긴다.
+ * 그래서 **원 단위 금액은 화면에 한 글자도 싣지 않는다.** 대신 남는 것이 있다.
+ * 비급여는 병원이 스스로 정하는 값이라 같은 항목도 몇 배씩 차이 나고, 어떤
+ * 종별·지역이 상대적으로 비싼지도 갈린다. 이런 **배수와 순서**는 절대 금액과
+ * 달리 시간이 지나도 크게 뒤집히지 않는다.
+ *
+ * 요약하면 이 사이트는 "얼마인가"에 답하지 않는다. "얼마나 다른가"에만 답하고
+ * 금액은 심평원 조회로 넘긴다. formatWon 같은 표시 함수를 두지 않는 이유다.
  */
 
 import { unstable_cache } from "next/cache";
@@ -236,9 +239,29 @@ export function withParticle(word: string, pair: "은는" | "이가"): string {
   return `${word}${hasJong ? "이" : "가"}`;
 }
 
-export function formatWon(value: number | null | undefined): string {
-  if (value === null || value === undefined) return "-";
-  return `${Math.round(value).toLocaleString()}원`;
+/**
+ * 기준값 대비 몇 퍼센트인지. "+38%" / "-12%" / "±0%"
+ *
+ * 절대 금액을 싣지 않기로 했으므로 비교는 전부 이 형태로 한다.
+ */
+export function relative(value: number, base: number): string {
+  if (!base) return "-";
+  const pct = Math.round(((value - base) / base) * 100);
+  if (pct === 0) return "±0%";
+  return `${pct > 0 ? "+" : "−"}${Math.abs(pct)}%`;
+}
+
+/** 정렬·강조에 쓰는 부호 */
+export function relativeSign(value: number, base: number): "up" | "down" | "flat" {
+  if (!base) return "flat";
+  const pct = Math.round(((value - base) / base) * 100);
+  return pct > 0 ? "up" : pct < 0 ? "down" : "flat";
+}
+
+/** 배수를 말로. "10배 차이" */
+export function ratioText(ratio: number | null): string {
+  if (!ratio) return "-";
+  return `${ratio}배`;
 }
 
 /** 최고 ÷ 최저. 이 사이트가 말하려는 것의 핵심 숫자다. */
@@ -285,6 +308,72 @@ export function averageByRegion(
       max: Math.max(...v),
     }))
     .sort((a, b) => b.avg - a.avg);
+}
+
+export interface RelativeRow {
+  label: string;
+  count: number;
+  /** 전체 평균 대비 (표시용) */
+  diff: string;
+  sign: "up" | "down" | "flat";
+  /** 정렬용 내부 값. 화면에 그대로 내보내지 않는다. */
+  index: number;
+}
+
+/**
+ * 어떤 축(지역·종별)으로 묶어 **전체 평균 대비 지수**를 낸다.
+ *
+ * 원 단위 값은 index 계산에만 쓰고 화면에는 퍼센트만 나간다.
+ * 표본이 적으면 지수가 쉽게 튀므로 minSamples 로 걸러낸다.
+ */
+export function relativeBy(
+  rows: PriceRow[],
+  pick: (r: PriceRow) => string | null,
+  minSamples = 3,
+): RelativeRow[] {
+  const groups = new Map<string, number[]>();
+  const all: number[] = [];
+
+  for (const r of rows) {
+    if (r.price_max === null) continue;
+    const key = (pick(r) ?? "").trim();
+    if (!key) continue;
+    const list = groups.get(key) ?? [];
+    list.push(r.price_max);
+    groups.set(key, list);
+    all.push(r.price_max);
+  }
+
+  if (all.length === 0) return [];
+  const base = all.reduce((a, b) => a + b, 0) / all.length;
+
+  return [...groups.entries()]
+    .filter(([, v]) => v.length >= minSamples)
+    .map(([label, v]) => {
+      const avg = v.reduce((a, b) => a + b, 0) / v.length;
+      return {
+        label,
+        count: v.length,
+        diff: relative(avg, base),
+        sign: relativeSign(avg, base),
+        index: avg / base,
+      };
+    })
+    .sort((a, b) => b.index - a.index);
+}
+
+/** 지역 축은 이름을 사람이 읽는 형태로 바꿔 준다 */
+export function relativeByRegion(
+  rows: PriceRow[],
+  minSamples = 3,
+): Array<RelativeRow & { regionSlug: string }> {
+  const index = new Map(REGIONS.map((r) => [r.slug, r.name]));
+  const bySlug = relativeBy(rows, (r) => r.region_slug, minSamples);
+  return bySlug.map((r) => ({
+    ...r,
+    regionSlug: r.label,
+    label: index.get(r.label) ?? r.label,
+  }));
 }
 
 /** 대분류별로 항목을 묶는다 (허브 화면) */
