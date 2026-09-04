@@ -284,7 +284,10 @@ const DIGIT_JONG = new Set(["0", "1", "3", "6", "7", "8"]);
  * 떼고 나면 영문 약어나 숫자로 끝나는 경우가 남는데, 읽는 소리를 기준으로
  * 고른다. "MRI는", "CD는", "1인실은" 처럼.
  */
-export function withParticle(word: string, pair: "은는" | "이가"): string {
+export function withParticle(
+  word: string,
+  pair: "은는" | "이가" | "이라",
+): string {
   const bare = word
     .trim()
     .replace(/\s*[([{〈《「『【][^)\]}〉》」』】]*[)\]}〉》」』】]\s*$/, "")
@@ -302,11 +305,14 @@ export function withParticle(word: string, pair: "은는" | "이가"): string {
   } else if (/[0-9]/.test(last)) {
     hasJong = DIGIT_JONG.has(last);
   } else {
-    return pair === "은는" ? `${word}은(는)` : `${word}이(가)`;
+    if (pair === "은는") return `${word}은(는)`;
+    if (pair === "이가") return `${word}이(가)`;
+    return `${word}(이)라`;
   }
 
   if (pair === "은는") return `${word}${hasJong ? "은" : "는"}`;
-  return `${word}${hasJong ? "이" : "가"}`;
+  if (pair === "이가") return `${word}${hasJong ? "이" : "가"}`;
+  return `${word}${hasJong ? "이라" : "라"}`;
 }
 
 /** 최고 ÷ 최저. 비급여가 왜 문제인지 한 숫자로 말해 주는 값이다. */
@@ -419,6 +425,14 @@ export function itemNoun(item: ItemStats): string {
   if (c === "상급병실료") return "병실";
   if (c === "예방접종료") return "접종";
   if (c === "치료재료") return "재료";
+  if (c === "보장구") return "기구";
+  if (c === "주사료") return "주사";
+  if (c === "교육상담료") return "교육";
+  if (c === "이학요법료" || c === "정신요법료") return "치료";
+  if (c === "모발이식술료" || c === "시력교정술료") return "수술";
+  if (c.includes("보철") || c.includes("치과")) return "치료";
+  if (c.includes("한방 시술")) return "시술";
+  if (c.includes("내시경")) return "검사";
   if (c.includes("검사") || c.includes("MRI") || c.includes("초음파"))
     return "검사";
   if (c.includes("수술")) return "시술";

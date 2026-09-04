@@ -1,5 +1,15 @@
 import type { ReactNode } from "react";
 import { GUIDES, type Guide } from "@/lib/guides";
+import {
+  DATA_UPDATED,
+  DATA_YEAR,
+  featuredItems,
+  formatWon,
+  itemLabel,
+  listItems,
+  priceRatio,
+  ratioText,
+} from "@/lib/fee-data";
 import { ITEM_HUB_SLUG, OFFICIAL_LINKS } from "@/lib/menu";
 import { breadcrumbJsonLd, faqJsonLd, SITE } from "@/lib/seo";
 import DataNotice from "@/components/price/DataNotice";
@@ -28,12 +38,17 @@ const BODIES: Record<
   "병원비-환급금-조회": { Body: GuideRefund, faq: faqRefund },
 };
 
-export default function GuideView({ guide }: { guide: Guide }) {
+export default async function GuideView({ guide }: { guide: Guide }) {
   const entry = BODIES[guide.slug];
   if (!entry) return null;
   const { Body, faq } = entry;
 
   const others = GUIDES.filter((g) => g.slug !== guide.slug);
+
+  // 가이드는 제도 설명만 하고 숫자가 없다. 그러면 "그래서 얼마인데"로 이어지지
+  // 않는다. 실제 자료에서 많이 찾는 항목 몇 개를 끌어와 금액 화면으로 넘긴다.
+  const items = await listItems();
+  const sample = featuredItems(items).slice(0, 8);
 
   return (
     <div className="single-wrap">
@@ -82,6 +97,24 @@ export default function GuideView({ guide }: { guide: Guide }) {
 
             <p className="entry-lead">{guide.description}</p>
 
+            {guide.outline.length > 0 && (
+              <nav className="toc" aria-label="이 글의 차례">
+                <p className="toc__title">이 글의 차례</p>
+                <ul className="toc__list">
+                  {guide.outline.map((o) => (
+                    <li key={o.id}>
+                      <a href={`#${o.id}`}>{o.label}</a>
+                    </li>
+                  ))}
+                  {faq.length > 0 && (
+                    <li>
+                      <a href="#faq">자주 묻는 질문</a>
+                    </li>
+                  )}
+                </ul>
+              </nav>
+            )}
+
             <div className="cta-row">
               <a
                 className="cta-btn"
@@ -105,6 +138,49 @@ export default function GuideView({ guide }: { guide: Guide }) {
             </div>
 
             <Body />
+
+            {sample.length > 0 && (
+              <>
+                <h2 id="numbers">그래서 실제로 얼마인가</h2>
+                <p>
+                  제도만 알고 금액을 모르면 준비가 되지 않습니다. {DATA_YEAR}년
+                  건강보험심사평가원 자료에서 사람들이 자주 찾는 항목의 전국
+                  중간값입니다. 이름을 누르면 지역 17곳·병원 종별 10곳의 금액과
+                  실손보험 적용, 받기 전에 물어볼 것을 볼 수 있습니다.
+                </p>
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">항목</th>
+                      <th scope="col">중간값</th>
+                      <th scope="col">최고 ÷ 최저</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sample.map((i) => (
+                      <tr key={i.item_slug}>
+                        <th scope="row">
+                          <a target="_self" href={`/${i.item_slug}`}>
+                            {itemLabel(i)}
+                          </a>
+                        </th>
+                        <td>{formatWon(i.median_price)}</td>
+                        <td>{ratioText(priceRatio(i))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p>
+                  집계된 최저·최고는 그런 값을 받는 곳이 한 곳만 있어도 잡히므로
+                  예산은 중간값으로 잡는 편이 어긋나지 않습니다. 이 값은 지역·종별로
+                  묶은 집계값이라 특정 병원의 가격이 아닙니다 — 통계표 갱신은{" "}
+                  {DATA_UPDATED}입니다.{" "}
+                  <a target="_self" href={`/${ITEM_HUB_SLUG}`}>
+                    항목 {items.length}개 전체 보기
+                  </a>
+                </p>
+              </>
+            )}
 
             {faq.length > 0 && (
               <section className="faq">

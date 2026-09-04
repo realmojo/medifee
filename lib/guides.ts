@@ -28,6 +28,14 @@ export interface Guide {
   /** 목록 화면에 쓰는 짧은 소개 */
   summary: string;
   emoji: string;
+  /**
+   * 본문의 h2 차례. 글머리에 목차로 싣는다.
+   *
+   * 본문은 컴포넌트에 있고 여기에는 제목만 둔다 — 본문에서 뽑아내려면
+   * 렌더 결과를 뒤져야 하는데, 네 편뿐이라 손으로 맞추는 편이 단순하다.
+   * **본문의 h2 id 와 글자 그대로 맞출 것.** 어긋나면 눌러도 움직이지 않는다.
+   */
+  outline: Array<{ id: string; label: string }>;
 }
 
 export const GUIDES: Guide[] = [
@@ -45,6 +53,13 @@ export const GUIDES: Guide[] = [
     ],
     summary: "급여·비급여·전액본인부담이 어떻게 다른지부터",
     emoji: "📖",
+    outline: [
+      { id: "what", label: "비급여는 보험이 안 되는 것" },
+      { id: "diff", label: "급여와 비급여, 누가 값을 정하느냐" },
+      { id: "third", label: "헷갈리는 전액본인부담" },
+      { id: "kinds", label: "어떤 것들이 비급여인가" },
+      { id: "next", label: "그럼 무엇을 해야 하나" },
+    ],
   },
   {
     slug: "비급여-진료비-조회",
@@ -60,6 +75,13 @@ export const GUIDES: Guide[] = [
     ],
     summary: "심평원 조회와 병원 고지, 무엇까지 알 수 있나",
     emoji: "🔎",
+    outline: [
+      { id: "where", label: "조회할 수 있는 곳 두 군데" },
+      { id: "how", label: "심평원에서 찾는 순서" },
+      { id: "limits", label: "조회로 알 수 없는 것" },
+      { id: "ask", label: "병원에 물을 때 이렇게" },
+      { id: "site", label: "이 사이트는 무엇을 보여주나" },
+    ],
   },
   {
     slug: "비급여-실비보험-청구",
@@ -75,6 +97,14 @@ export const GUIDES: Guide[] = [
     ],
     summary: "실손보험으로 돌려받는 범위와 서류",
     emoji: "🧾",
+    outline: [
+      { id: "basic", label: "실손보험이 보장하는 범위" },
+      { id: "no", label: "보장되지 않는 것들" },
+      { id: "deduct", label: "자기부담금 구조" },
+      { id: "docs", label: "청구할 때 챙길 서류" },
+      { id: "order", label: "청구 순서" },
+      { id: "also", label: "돌려받는 길이 하나 더" },
+    ],
   },
   {
     slug: "병원비-환급금-조회",
@@ -90,6 +120,14 @@ export const GUIDES: Guide[] = [
     ],
     summary: "본인부담상한제와 진료비 확인요청, 무엇이 다른가",
     emoji: "💸",
+    outline: [
+      { id: "two", label: "환급금은 사실 두 가지" },
+      { id: "cap", label: "본인부담상한제" },
+      { id: "check", label: "진료비 확인요청" },
+      { id: "how", label: "어떻게 신청하나" },
+      { id: "caution", label: "주의할 것" },
+      { id: "before", label: "애초에 덜 내려면" },
+    ],
   },
 ];
 

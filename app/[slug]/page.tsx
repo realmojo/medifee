@@ -22,6 +22,7 @@ import {
   ratioText,
   type ItemStats,
 } from "@/lib/fee-data";
+import { cadenceWord, itemNote, noteKeywords } from "@/lib/item-notes";
 import { buildMetadata, SITE } from "@/lib/seo";
 import { decodeSlug } from "@/lib/slug";
 import ItemHubView from "./ItemHubView";
@@ -119,22 +120,22 @@ function guideMetadata(guide: Guide): Metadata {
   });
 }
 
+/**
+ * 항목 상세의 메타데이터.
+ *
+ * 설명에 **숫자와 집계 범위를 함께** 넣는다. 668개가 같은 문장 틀을 쓰지만
+ * 항목마다 값이 달라 서로 다른 문장이 된다. 키워드는 lib/item-notes 의
+ * 동의어까지 끌어온다 — "도수치료 비용"만 덮으면 "도수치료 실비"를 놓친다.
+ */
 function itemMetadata(item: ItemStats): Metadata {
   const label = itemLabel(item);
   const ratio = priceRatio(item);
+  const unit = cadenceWord(itemNote(item));
   return buildMetadata({
     path: `/${item.item_slug}`,
     title: `${itemHeadline(item)} — 중간값 ${formatWon(item.median_price)} | ${SITE.name}`,
-    description: `${label} 비용은 ${DATA_YEAR}년 기준 중간값 ${formatWon(item.median_price)}, 집계 범위는 ${formatWon(item.min_price)}~${formatWon(item.max_price)}${ratio ? `로 ${ratioText(ratio)} 차이` : ""}입니다. 지역별·병원 종별 금액을 함께 정리했습니다.`,
-    keywords: [
-      label,
-      `${label} 비용`,
-      `${label} 가격`,
-      `${label} 실비`,
-      item.category,
-      "비급여",
-      "비급여 진료비",
-    ],
+    description: `${label} 비용은 ${DATA_YEAR}년 기준 중간값 ${formatWon(item.median_price)}${unit ? `(${unit})` : ""}, 집계 범위는 ${formatWon(item.min_price)}~${formatWon(item.max_price)}${ratio ? `로 ${ratioText(ratio)} 차이` : ""}입니다. 시도 ${item.scope_count}곳·병원 종별 ${item.class_count}종의 금액과 실손보험 적용, 받기 전에 확인할 것을 함께 정리했습니다.`,
+    keywords: noteKeywords(item, label),
     type: "article",
   });
 }
@@ -144,12 +145,16 @@ function scopeMetadata(type: ScopeType, scope: Scope): Metadata {
   return buildMetadata({
     path: `/${scope.slug}`,
     title: `${scope.slug} 비급여 진료비 — 항목별 금액 (${DATA_YEAR}년) | ${SITE.name}`,
-    description: `${scope.name}의 비급여 진료비를 항목별로 정리했습니다. 도수치료·MRI·진단서 등의 중간값이 ${word.base} 기준과 견주어 어느 쪽인지 확인하세요.`,
+    description: `${scope.name}의 비급여 진료비를 항목별로 정리했습니다. 도수치료·MRI·초음파·진단서 등의 중간값이 ${word.base} 기준보다 높은지 낮은지, 어떤 항목이 특히 벌어지는지 ${DATA_YEAR}년 심사평가원 자료로 확인하세요.`,
     keywords: [
       `${scope.slug} 비급여`,
+      `${scope.slug} 비급여 진료비`,
       `${scope.slug} 병원비`,
       `${scope.slug} 도수치료`,
+      `${scope.slug} MRI 비용`,
+      `${scope.slug} 진단서 비용`,
       "비급여 진료비",
+      "비급여 가격 비교",
     ],
   });
 }
