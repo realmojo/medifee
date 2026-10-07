@@ -1,4 +1,5 @@
 import { CLASS_HUB_SLUG, REGION_HUB_SLUG } from "./scopes";
+import { TOPIC_HUB_SLUG } from "./topics";
 
 export interface MenuItem {
   name: string;
@@ -10,6 +11,7 @@ export const ITEM_HUB_SLUG = "항목";
 
 export const NAV: MenuItem[] = [
   { name: "홈", href: "/" },
+  { name: "주제별", href: `/${TOPIC_HUB_SLUG}` },
   { name: "항목별", href: `/${ITEM_HUB_SLUG}` },
   { name: "지역별", href: `/${REGION_HUB_SLUG}` },
   { name: "종별", href: `/${CLASS_HUB_SLUG}` },

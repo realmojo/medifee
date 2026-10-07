@@ -16,6 +16,7 @@ import {
 } from "@/lib/fee-data";
 import { ITEM_HUB_SLUG, OFFICIAL_LINKS } from "@/lib/menu";
 import { GUIDES } from "@/lib/guides";
+import { findTopic, TOPIC_HUB_SLUG, type Topic } from "@/lib/topics";
 import { CLASSES, CLASS_HUB_SLUG, REGIONS, REGION_HUB_SLUG } from "@/lib/scopes";
 import StatTile from "@/components/price/StatTile";
 import DataNotice from "@/components/price/DataNotice";
@@ -24,8 +25,30 @@ import { AD_SLOTS } from "@/lib/ads";
 
 export const revalidate = 300;
 
-/** 첫 화면에서 종별 차이를 보여줄 항목. 가장 많이 검색되는 비급여다. */
-const SHOWCASE_SLUG = "도수치료";
+/**
+ * 첫 화면에서 종별 차이를 보여줄 항목.
+ *
+ * 처음에는 도수치료였는데 2026년 7월 관리급여로 바뀌어 값이 1회 4만3850원으로
+ * 통일됐다. 2025년 비급여 값을 첫 화면에 내걸면 지금 가격처럼 읽히므로 여전히
+ * 비급여이고 종별 차이가 큰 1인실로 바꿨다.
+ */
+const SHOWCASE_SLUG = "1인실";
+
+/** 첫 화면에 내거는 주제. 네이버 검색량이 큰 순서 */
+const HOME_TOPICS = [
+  "독감-예방접종-가격",
+  "임플란트-가격",
+  "대상포진-예방접종-가격",
+  "백내장-다초점렌즈-가격",
+  "도수치료-관리급여",
+  "무릎-mri-비용",
+  "수면내시경-비용",
+  "모발이식-비용",
+  "치아-크라운-가격",
+  "스케일링-비용",
+  "진단서-발급-비용",
+  "1인실-2인실-병실료",
+];
 
 export default async function HomePage() {
   const items = await listItems();
@@ -52,7 +75,7 @@ export default async function HomePage() {
       <div className="page-head">
         <h1>
           <span aria-hidden>🩺</span>
-          도수치료 10만원, 그런데 어디서 받느냐에 따라
+          1인실 하루 14만원, 그런데 어느 병원이냐에 따라
         </h1>
         <p>
           건강보험이 적용되지 않는 <strong>비급여</strong>는 병원이 값을 스스로
@@ -285,6 +308,27 @@ export default async function HomePage() {
               </p>
             </a>
           ))}
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 36 }}>
+        <div className="sec-head">
+          <h2 className="sec-title">많이 찾는 비용</h2>
+          <a target="_self" href={`/${TOPIC_HUB_SLUG}`} className="sec-more">
+            주제별 전체 보기
+          </a>
+        </div>
+        <div className="sido-block">
+          <div className="region-chips">
+            {HOME_TOPICS.map(findTopic)
+              .filter((t): t is Topic => Boolean(t))
+              .map((t) => (
+                <a target="_self" key={t.slug} href={`/${t.slug}`}>
+                  <span aria-hidden>{t.emoji}</span>
+                  {t.title.split(" — ")[0]}
+                </a>
+              ))}
+          </div>
         </div>
       </section>
 

@@ -7,7 +7,7 @@ export const SITE = {
   locale: "ko_KR",
   ogImage: "/opengraph-image",
   description:
-    "도수치료 중간값 10만원, 상급종합병원은 얼마일까. 심평원이 공개한 2025년 비급여 진료비를 항목별·지역별·병원 종별로 정리했습니다.",
+    "1인실 하루 14만원, 상급종합병원은 얼마일까. 심평원이 공개한 2025년 비급여 진료비를 항목별·지역별·병원 종별로 정리했습니다.",
 } as const;
 
 export function absoluteUrl(path: string): string {

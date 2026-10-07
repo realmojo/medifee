@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "export:urls": "node scripts/export-urls.mjs",
+    "check:topics": "node scripts/check-topics.mjs",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",

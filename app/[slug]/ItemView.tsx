@@ -11,8 +11,6 @@ import {
   priceRatio,
   rangeText,
   ratioText,
-  relative,
-  relativeSign,
   siblingItems,
   withParticle,
   type FeeRow,
@@ -25,6 +23,8 @@ import { breadcrumbJsonLd, datasetJsonLd, faqJsonLd, SITE } from "@/lib/seo";
 import DataNotice from "@/components/price/DataNotice";
 import Adsense from "@/components/Adsense";
 import { AD_SLOTS } from "@/lib/ads";
+import { TOPIC_HUB_SLUG, topicsForItem } from "@/lib/topics";
+import { diffCell, highest, lowest, orderRows } from "./rows";
 
 /**
  * 항목 상세 — 이 사이트의 주축 화면.
@@ -80,6 +80,8 @@ export default async function ItemView({ item }: { item: ItemStats }) {
   const compareRows = siblings.slice(0, 8);
 
   const projection = buildProjection(item, note);
+  const topics = topicsForItem(item.item_slug);
+  const changed = topics.find((t) => t.itemNotice);
 
   const description = `${label} 중간값은 ${formatWon(item.median_price)}입니다. ${DATA_YEAR}년 심사평가원 자료로 시도 ${item.scope_count}곳과 병원 종별 ${item.class_count}곳의 금액을 정리했습니다.`;
 
@@ -169,6 +171,15 @@ export default async function ItemView({ item }: { item: ItemStats }) {
               {formatWon(item.min_price)}과 {formatWon(item.max_price)}
               {ratio ? ` — ${ratioText(ratio)} 차이입니다.` : "입니다."}
             </p>
+
+            {changed && (
+              <div className="notice">
+                <strong>제도가 바뀌었습니다.</strong> {changed.itemNotice}{" "}
+                <a target="_self" href={`/${changed.slug}`}>
+                  {changed.name} 자세히 보기
+                </a>
+              </div>
+            )}
 
             <div className="cta-row">
               <a
@@ -591,6 +602,27 @@ export default async function ItemView({ item }: { item: ItemStats }) {
         </div>
       </article>
 
+      {topics.length > 0 && (
+        <section style={{ marginTop: 28 }}>
+          <div className="sec-head">
+            <h2 className="sec-title">이 항목을 함께 비교한 글</h2>
+            <a target="_self" href={`/${TOPIC_HUB_SLUG}`} className="sec-more">
+              주제별 비용
+            </a>
+          </div>
+          <div className="sido-block">
+            <div className="region-chips">
+              {topics.map((t) => (
+                <a target="_self" key={t.slug} href={`/${t.slug}`}>
+                  <span aria-hidden>{t.emoji}</span>
+                  {t.title.split(" — ")[0]}
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {siblings.length > 0 && (
         <section style={{ marginTop: 28 }}>
           <div className="sec-head">
@@ -624,30 +656,6 @@ export default async function ItemView({ item }: { item: ItemStats }) {
 }
 
 /* ------------------------------- 도우미 ------------------------------- */
-
-/** 정해 둔 순서대로 늘어놓는다. 금액순으로 두면 페이지마다 순서가 달라진다. */
-function orderRows(rows: FeeRow[], order: string[]): FeeRow[] {
-  const rank = new Map(order.map((s, i) => [s, i]));
-  return [...rows].sort(
-    (a, b) => (rank.get(a.scope) ?? 99) - (rank.get(b.scope) ?? 99),
-  );
-}
-
-function highest(rows: FeeRow[]): FeeRow | null {
-  const withValue = rows.filter((r) => r.median_price !== null);
-  if (withValue.length === 0) return null;
-  return withValue.reduce((a, b) =>
-    (b.median_price ?? 0) > (a.median_price ?? 0) ? b : a,
-  );
-}
-
-function lowest(rows: FeeRow[]): FeeRow | null {
-  const withValue = rows.filter((r) => r.median_price !== null);
-  if (withValue.length === 0) return null;
-  return withValue.reduce((a, b) =>
-    (b.median_price ?? 0) < (a.median_price ?? 0) ? b : a,
-  );
-}
 
 /**
  * 한 축 안에서 가장 높은 중간값 ÷ 가장 낮은 중간값.
@@ -699,15 +707,6 @@ function gapWord(item: ItemStats): string {
   if (diff > 0.15) return "제법 벌어져 있습니다 — 평균이 중간값보다 높습니다";
   if (diff < -0.15) return "제법 벌어져 있습니다 — 평균이 중간값보다 낮습니다";
   return "크게 다르지 않습니다";
-}
-
-function diffCell(value: number | null, base: number) {
-  if (value === null || !base) return <span>-</span>;
-  return (
-    <span className={`rel rel--${relativeSign(value, base)}`}>
-      {relative(value, base)}
-    </span>
-  );
 }
 
 /* ------------------------------ 총액 계산 ------------------------------ */

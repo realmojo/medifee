@@ -13,6 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
 import { CLASS_TABLES, REGION_TABLES } from "./kosis-tables.mjs";
+import { loadTopics } from "./load-topics.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 dotenv.config({ path: path.join(ROOT, ".env.local") });
@@ -31,6 +32,7 @@ const STATIC = [
   "/항목",
   "/지역",
   "/종별",
+  "/주제",
   "/about",
   "/contact",
   "/privacy",
@@ -61,9 +63,11 @@ async function main() {
     ...CLASS_TABLES.map(([name]) => name),
   ];
 
+  const { TOPICS } = await loadTopics();
   const urls = [
     ...STATIC.map(abs),
     ...GUIDES.map(abs),
+    ...TOPICS.map((t) => abs(`/${t.slug}`)),
     ...scopes.map((s) => abs(`/${s}`)),
   ];
 
@@ -75,12 +79,13 @@ async function main() {
   for (const r of items ?? []) urls.push(abs(`/${r.item_slug}`));
 
   const uniq = [...new Set(urls)];
-  const out = path.join(ROOT, "naver-indexing/urls.txt");
+  // URL 목록은 m/naver-indexing/data/<사이트>/ 한곳에서 관리한다.
+  const out = path.resolve(ROOT, "../naver-indexing/data/medifee/urls.txt");
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, `${uniq.join("\n")}\n`, "utf8");
 
   console.log(
-    `고정 ${STATIC.length} · 가이드 ${GUIDES.length} · 지역/종별 ${scopes.length} · 항목 ${items?.length ?? 0}`,
+    `고정 ${STATIC.length} · 가이드 ${GUIDES.length} · 주제 ${TOPICS.length} · 지역/종별 ${scopes.length} · 항목 ${items?.length ?? 0}`,
   );
   console.log(`합계 ${uniq.length}\n${out}`);
 }

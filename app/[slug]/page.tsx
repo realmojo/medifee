@@ -12,6 +12,7 @@ import {
 } from "@/lib/scopes";
 import { ITEM_HUB_SLUG } from "@/lib/menu";
 import { findGuide, GUIDES, type Guide } from "@/lib/guides";
+import { findTopic, TOPIC_HUB_SLUG, TOPICS, type Topic } from "@/lib/topics";
 import {
   DATA_YEAR,
   formatWon,
@@ -30,9 +31,11 @@ import ItemView from "./ItemView";
 import ScopeHubView from "./ScopeHubView";
 import ScopeView from "./ScopeView";
 import GuideView from "./GuideView";
+import TopicHubView from "./TopicHubView";
+import TopicView from "./TopicView";
 
 /**
- * 한 라우트가 여섯 화면을 맡는다.
+ * 한 라우트가 여덟 화면을 맡는다.
  *
  *   /항목          → 항목 허브
  *   /지역          → 시도 허브
@@ -41,6 +44,8 @@ import GuideView from "./GuideView";
  *   /서울          → 시도 상세  (lib/scopes.ts)
  *   /의원          → 종별 상세  (lib/scopes.ts)
  *   /비급여-뜻      → 가이드 글
+ *   /주제          → 주제 허브
+ *   /임플란트-가격   → 주제 글 (lib/topics/ — 여러 항목을 검색어 단위로 묶은 글)
  *
  * **고정 슬러그를 항목보다 먼저 찾는다.** 항목 슬러그는 원본 데이터에서
  * 나오는 값이라 언제 무엇이 들어올지 모른다. 순서를 뒤집으면 새 항목 이름이
@@ -98,8 +103,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     });
   }
 
+  if (slug === TOPIC_HUB_SLUG) {
+    return buildMetadata({
+      path: `/${TOPIC_HUB_SLUG}`,
+      title: `주제별 비급여 비용 — 임플란트·MRI·예방접종 가격 비교 | ${SITE.name}`,
+      description:
+        "임플란트, 무릎 MRI, 독감 예방접종, 백내장 다초점렌즈처럼 실제로 많이 찾는 비급여 비용을 주제별로 묶어 재료·제품별 값과 건강보험 조건을 정리했습니다.",
+      keywords: [
+        "비급여 비용",
+        "임플란트 가격",
+        "MRI 비용",
+        "예방접종 가격",
+        "진단서 비용",
+      ],
+    });
+  }
+
   const guide = findGuide(slug);
   if (guide) return guideMetadata(guide);
+
+  const topic = findTopic(slug);
+  if (topic) return topicMetadata(topic);
 
   const found = findScope(slug);
   if (found) return scopeMetadata(found.type, found.scope);
@@ -116,6 +140,16 @@ function guideMetadata(guide: Guide): Metadata {
     title: `${guide.title} | ${SITE.name}`,
     description: guide.description,
     keywords: guide.keywords,
+    type: "article",
+  });
+}
+
+function topicMetadata(topic: Topic): Metadata {
+  return buildMetadata({
+    path: `/${topic.slug}`,
+    title: `${topic.title} | ${SITE.name}`,
+    description: topic.description,
+    keywords: topic.keywords,
     type: "article",
   });
 }
@@ -166,8 +200,13 @@ export default async function SlugPage({ params }: Props) {
   if (slug === REGION_HUB_SLUG) return <ScopeHubView type="region" />;
   if (slug === CLASS_HUB_SLUG) return <ScopeHubView type="class" />;
 
+  if (slug === TOPIC_HUB_SLUG) return <TopicHubView />;
+
   const guide = findGuide(slug);
   if (guide) return <GuideView guide={guide} />;
+
+  const topic = findTopic(slug);
+  if (topic) return <TopicView topic={topic} />;
 
   const found = findScope(slug);
   if (found) return <ScopeView type={found.type} scope={found.scope} />;
@@ -183,7 +222,9 @@ export function generateStaticParams(): { slug: string }[] {
     { slug: ITEM_HUB_SLUG },
     { slug: REGION_HUB_SLUG },
     { slug: CLASS_HUB_SLUG },
+    { slug: TOPIC_HUB_SLUG },
     ...GUIDES.map((g) => ({ slug: g.slug })),
+    ...TOPICS.map((t) => ({ slug: t.slug })),
     ...REGIONS.map((r) => ({ slug: r.slug })),
     ...CLASSES.map((c) => ({ slug: c.slug })),
   ];

@@ -33,6 +33,7 @@ import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
 import { allTables, CLASS_TABLES, REGION_TABLES } from "./kosis-tables.mjs";
+import { loadTopics } from "./load-topics.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 dotenv.config({ path: path.join(ROOT, ".env.local") });
@@ -87,8 +88,12 @@ function slugify(name) {
  *
  * `/{slug}` 한 라우트가 항목·시도·종별·가이드를 전부 맡는다. 항목 이름이
  * "의원"이나 "서울"로 나오면 그 페이지를 가려버리므로 여기서 막는다.
+ * 주제 글 슬러그는 lib/topics/ 에서 그대로 읽어 온다.
  */
+const { TOPICS, TOPIC_HUB_SLUG } = await loadTopics();
 const RESERVED = new Set([
+  TOPIC_HUB_SLUG,
+  ...TOPICS.map((t) => t.slug),
   ...REGION_TABLES.map(([name]) => name),
   ...CLASS_TABLES.map(([name]) => name),
   "항목",

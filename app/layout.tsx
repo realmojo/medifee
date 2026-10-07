@@ -7,7 +7,7 @@ import SiteFooter from "@/components/layout/SiteFooter";
 
 const title = "비급여 진료비 - 항목별 금액과 지역·병원 종별 차이";
 const description =
-  "도수치료 중간값 10만원, MRI 45만원. 심사평가원이 공개한 2025년 비급여 진료비를 항목별·지역별·병원 종별로 정리했습니다.";
+  "1인실 하루 14만원, MRI 45만원, 임플란트 120만원. 심사평가원이 공개한 2025년 비급여 진료비를 항목별·지역별·병원 종별로 정리했습니다.";
 
 const GOOGLE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION ?? "";
 

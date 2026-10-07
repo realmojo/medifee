@@ -3,9 +3,10 @@ import { SITE_LINKS, ITEM_HUB_SLUG } from "@/lib/menu";
 import { CLASSES, CLASS_HUB_SLUG, REGIONS, REGION_HUB_SLUG } from "@/lib/scopes";
 import { listItems } from "@/lib/fee-data";
 import { GUIDES } from "@/lib/guides";
+import { TOPIC_HUB_SLUG, TOPICS } from "@/lib/topics";
 import { absoluteUrl } from "@/lib/seo";
 
-/** 전체 URL 이 700개쯤이라 한 파일로 충분하다 */
+/** 전체 URL 이 800개쯤이라 한 파일로 충분하다 */
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -17,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     `/${ITEM_HUB_SLUG}`,
     `/${REGION_HUB_SLUG}`,
     `/${CLASS_HUB_SLUG}`,
+    `/${TOPIC_HUB_SLUG}`,
     ...SITE_LINKS.map((l) => l.href),
   ].map((path) => ({
     url: absoluteUrl(path),
@@ -30,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...GUIDES.map((g) => ({
       url: absoluteUrl(`/${g.slug}`),
       lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.9,
+    })),
+    ...TOPICS.map((t) => ({
+      url: absoluteUrl(`/${t.slug}`),
+      lastModified: new Date(t.checked),
       changeFrequency: "monthly" as const,
       priority: 0.9,
     })),
